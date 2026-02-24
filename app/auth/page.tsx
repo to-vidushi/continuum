@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import styles from './Auth.module.css'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function AuthPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -22,34 +25,32 @@ export default function AuthPage() {
       password,
     })
     if (error) alert(error.message)
-    else alert('Login success!')
+    else router.push('/')
   }
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Auth Test</h1>
+    <div className={styles.container}>
+      <div className={styles.formWrapper}>
+        <h1>Auth</h1>
 
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-      />
+        <input
+          className={styles.input}
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
 
-      <br /><br />
+        <input
+          className={styles.input}
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+        />
 
-      <input
-        placeholder="Password"
-        type="password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={signUp}>Sign Up</button>
-      <button onClick={signIn} style={{ marginLeft: 10 }}>
-        Sign In
-      </button>
+        <button onClick={signUp} className={styles.button}>Sign Up</button>
+        <button onClick={signIn} className={styles.button}>Sign In</button>
+      </div>
     </div>
   )
 }
