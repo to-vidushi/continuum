@@ -1,44 +1,232 @@
-.container {
+.root {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f7fafc;
+  min-height: 100vh;
+  font-family: 'DM Sans', system-ui, sans-serif;
 }
 
-.formWrapper {
-  padding: 40px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
+.left {
+  width: 40%;
+  background: #1a1a18;
+  display: flex;
+  align-items: center;
+  padding: 48px 56px;
+}
+
+.leftContent {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+}
+
+.logoRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 48px;
+}
+
+.logoMark {
+  width: 32px;
+  height: 32px;
+  background: #e8736c;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+}
+
+.logoText {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.heroCopy {
+  margin-bottom: 40px;
+}
+
+.heroTitle {
+  font-size: 32px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.25;
+  margin-bottom: 12px;
+}
+
+.heroItalic {
+  color: #e8736c;
+}
+
+.heroSub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.6;
+  max-width: 300px;
+}
+
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  margin-top: 7px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.featureItemText {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+}
+
+.right {
+  flex: 1;
+  background: #faf8f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+.formBox {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.formHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formTitle {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1a1a18;
+}
+
+.formSub {
+  font-size: 14px;
+  color: #888;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.03em;
 }
 
 .input {
-  padding: 12px 15px;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  font-size: 1rem;
   width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't affect width */
+  padding: 11px 14px;
+  border: 1.5px solid #e8e4dd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a1a18;
+  background: #fdfcfa;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.button {
-  padding: 12px 15px;
+.input:focus {
+  border-color: #e8736c;
+  box-shadow: 0 0 0 2px rgba(232,115,108,0.12);
+  background: #fff;
+}
+
+.input::placeholder {
+  color: #bbb;
+}
+
+.message {
+  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid;
+  font-weight: 500;
+}
+
+.messageError {
+  color: #e8736c;
+  background: #fff5f4;
+  border-color: #fcd5d2;
+}
+
+.messageSuccess {
+  color: #4a9e6b;
+  background: #f2fbf5;
+  border-color: #c3e6cc;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 12px;
+  background: #1a1a18;
+  color: #fff;
   border: none;
-  border-radius: 4px;
-  background-color: #3182ce;
-  color: white;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background 0.15s;
 }
 
-.button:hover {
-  background-color: #2b6cb0;
+.submitBtn:hover:not(:disabled) {
+  background: #2a2a27;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toggleRow {
+  text-align: center;
+}
+
+.toggleText {
+  font-size: 14px;
+  color: #888;
+}
+
+.toggleBtn {
+  background: none;
+  border: none;
+  color: #e8736c;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggleBtn:hover {
+  text-decoration: underline;
 }

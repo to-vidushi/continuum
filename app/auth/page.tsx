@@ -2,55 +2,180 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import styles from './Auth.module.css'
 import { supabase } from '@/lib/supabaseClient'
+import styles from './Auth.module.css'
 
 export default function AuthPage() {
   const router = useRouter()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
-  const signUp = async () => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    if (error) alert(error.message)
-    else alert('Signup success! Check Supabase Users.')
+  const isSuccess = message.includes('Check')
+
+  const handleSignUp = async () => {
+    setLoading(true)
+    setMessage('')
+    const { error } = await supabase.auth.signUp({ email, password })
+    setMessage(error ? error.message : 'Check your email to confirm your account.')
+    setLoading(false)
   }
 
-  const signIn = async () => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (error) alert(error.message)
-    else router.push('/')
+  const handleSignIn = async () => {
+    setLoading(true)
+    setMessage('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setMessage(error.message)
+      setLoading(false)
+    } else {
+      router.refresh()
+      router.push('/')
+    }
+  }
+
+  const handleSubmit = () => {
+    mode === 'signin' ? handleSignIn() : handleSignUp()
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.formWrapper}>
-        <h1>Auth</h1>
+    <div className={styles.root}>
 
-        <input
-          className={styles.input}
-          placeholder="Email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
+      {/* Left panel */}
+      <div className={styles.left}>
+        <div className={styles.leftContent}>
 
-        <input
-          className={styles.input}
-          placeholder="Password"
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
+          <div className={styles.logoRow}>
+            <div className={styles.logoMark}>C</div>
+            <span className={styles.logoText}>Continuum</span>
+          </div>
 
-        <button onClick={signUp} className={styles.button}>Sign Up</button>
-        <button onClick={signIn} className={styles.button}>Sign In</button>
+          <div className={styles.heroCopy}>
+            <h1 className={styles.heroTitle}>
+              Build the life <br />
+              <span className={styles.heroItalic}>you intend.</span>
+            </h1>
+            <p className={styles.heroSub}>
+              Track habits, review progress, and stay accountable — without noise.
+            </p>
+          </div>
+
+          <div className={styles.featureList}>
+            {[
+              'Daily wins tracking',
+              'Habit streaks',
+              'Weekly reviews',
+              'Personal challenges',
+            ].map(text => (
+              <div key={text} className={styles.featureItem}>
+                <span className={styles.dot} />
+                <span className={styles.featureItemText}>{text}</span>
+              </div>
+            ))}
+          </div>
+
+        </div>
       </div>
+
+      {/* Right panel */}
+      <div className={styles.right}>
+        <div className={styles.formBox}>
+
+          <div className={styles.formHeader}>
+            <h2 className={styles.formTitle}>
+              {mode === 'signin' ? 'Welcome back' : 'Create account'}
+            </h2>
+            <p className={styles.formSub}>
+              {mode === 'signin'
+                ? 'Sign in to continue.'
+                : 'Start tracking your progress.'}
+            </p>
+          </div>
+
+          <div className={styles.fields}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Email</label>
+              <input
+                className={styles.input}
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              />
+            </div>
+
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Password</label>
+              <input
+                className={styles.input}
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              />
+            </div>
+
+            {message && (
+              <div
+                className={`${styles.message} ${
+                  isSuccess ? styles.messageSuccess : styles.messageError
+                }`}
+              >
+                {message}
+              </div>
+            )}
+
+            <button
+              className={styles.submitBtn}
+              onClick={handleSubmit}
+              disabled={loading || !email || !password}
+            >
+              {loading
+                ? 'Please wait…'
+                : mode === 'signin'
+                ? 'Sign In'
+                : 'Create Account'}
+            </button>
+          </div>
+
+          <div className={styles.toggleRow}>
+            {mode === 'signin' ? (
+              <span className={styles.toggleText}>
+                Don’t have an account?{' '}
+                <button
+                  className={styles.toggleBtn}
+                  onClick={() => {
+                    setMode('signup')
+                    setMessage('')
+                  }}
+                >
+                  Sign up
+                </button>
+              </span>
+            ) : (
+              <span className={styles.toggleText}>
+                Already have an account?{' '}
+                <button
+                  className={styles.toggleBtn}
+                  onClick={() => {
+                    setMode('signin')
+                    setMessage('')
+                  }}
+                >
+                  Sign in
+                </button>
+              </span>
+            )}
+          </div>
+
+        </div>
+      </div>
+
     </div>
   )
 }
