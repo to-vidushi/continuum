@@ -1,0 +1,354 @@
+.page {
+  min-height: 100vh;
+  background: #faf8f5;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  padding-bottom: 60px;
+}
+
+.pageHeader {
+  padding: 28px 32px 0;
+}
+
+.heading {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.subheading {
+  font-size: 14px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+/* ── Tab bar ── */
+.tabBar {
+  padding: 20px 32px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid #e8e4de;
+  background: #faf8f5;
+}
+
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+  margin-bottom: -1px;
+}
+
+.tabActive {
+  color: #222;
+  border-bottom: 2px solid #222;
+}
+
+/* ── Content area ── */
+.content {
+  padding: 28px 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+}
+
+/* ── Section cards ── */
+.sectionCard {
+  background: #fff;
+  border: 1px solid #ece9e2;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a18;
+  margin: 0 0 4px;
+}
+
+.sectionSub {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0 0 20px;
+}
+
+/* ── Stats strip ── */
+.statsStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 24px 32px 0;
+  max-width: 1200px;
+}
+
+.statCard {
+  background: #fff;
+  border: 1px solid #ece9e2;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.statIcon { font-size: 22px; }
+
+.statValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a18;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* ── Heatmap ── */
+.heatmapWrap {
+  overflow-x: auto;
+}
+
+.heatmapGrid {
+  display: flex;
+  gap: 3px;
+}
+
+.heatmapWeekCol {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.heatCell {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  transition: transform 0.1s;
+  cursor: default;
+}
+
+.heatCell:hover {
+  transform: scale(1.3);
+}
+
+.heatmapMonthLabels {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 4px;
+  padding-left: 0;
+}
+
+.heatmapMonthLabel {
+  font-size: 10px;
+  color: #bbb;
+  width: 14px;
+  text-align: center;
+}
+
+.heatmapDayLabels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-right: 6px;
+  padding-top: 0;
+}
+
+.heatmapDayLabel {
+  font-size: 9px;
+  color: #ccc;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  text-transform: uppercase;
+}
+
+.heatmapRow {
+  display: flex;
+  gap: 3px;
+  align-items: flex-start;
+}
+
+.heatLegend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+.heatLegendLabel {
+  font-size: 11px;
+  color: #bbb;
+}
+
+.heatLegendCell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+/* ── Habit selector ── */
+.habitSelector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.habitChip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 2px solid #ece9e2;
+  background: #faf8f5;
+  font-size: 13px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.habitChipActive {
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ── Bar chart ── */
+.barChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+}
+
+.barWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  transition: height 0.4s ease;
+  min-height: 2px;
+}
+
+.barLabel {
+  font-size: 10px;
+  color: #bbb;
+  text-align: center;
+}
+
+.barValue {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+}
+
+/* ── Line chart (daily wins) ── */
+.lineChartWrap {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ── Habit progress bars ── */
+.progressList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.progressItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progressTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progressName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a18;
+}
+
+.progressPct {
+  font-size: 13px;
+  font-weight: 700;
+  color: #888;
+}
+
+.progressBg {
+  background: #f0ede8;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s ease;
+}
+
+/* ── Empty state ── */
+.emptyState {
+  text-align: center;
+  padding: 40px 20px;
+  color: #ccc;
+  font-size: 14px;
+}
+
+/* ── Period selector ── */
+.periodSelector {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.periodBtn {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #ece9e2;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: #aaa;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.periodBtnActive {
+  background: #1a1a18;
+  border-color: #1a1a18;
+  color: #fff;
+}

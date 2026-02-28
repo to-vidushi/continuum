@@ -1,0 +1,478 @@
+.page {
+  min-height: 100vh;
+  background: #faf8f5;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  padding-bottom: 60px;
+}
+
+/* ── Page header ── */
+.pageHeader {
+  padding: 28px 32px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heading {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.addHabitBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a1a18;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.addHabitBtn:hover {
+  background: #2a2a27;
+}
+
+/* ── Tabs / filter bar ── */
+.filterBar {
+  padding: 20px 32px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #e8e4de;
+  background: #faf8f5;
+}
+
+.filterBtn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s;
+  margin-bottom: -1px;
+}
+
+.filterBtnActive {
+  color: #1a1a18;
+  border-bottom: 2px solid #1a1a18;
+}
+
+/* ── Stats strip ── */
+.statsStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 24px 32px 0;
+}
+
+.statCard {
+  background: #fff;
+  border: 1px solid #ece9e2;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.statIcon {
+  font-size: 22px;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a18;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* ── Habits grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 24px 32px 0;
+}
+
+/* ── Habit card ── */
+.card {
+  background: #fff;
+  border: 1px solid #ece9e2;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.habitIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.habitName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a18;
+  line-height: 1.3;
+}
+
+.habitCategory {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 1px;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  color: #ddd;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.deleteBtn:hover {
+  color: #e8736c;
+}
+
+/* ── Streak row ── */
+.streakRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.streakItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.streakNum {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a18;
+  line-height: 1;
+}
+
+.streakLabel {
+  font-size: 11px;
+  color: #bbb;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.streakDivider {
+  width: 1px;
+  height: 28px;
+  background: #ece9e2;
+}
+
+/* ── Mini heatmap (last 7 days) ── */
+.miniHeatmap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.heatDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.heatDayLabel {
+  font-size: 9px;
+  color: #ccc;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.heatDot {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  transition: transform 0.12s;
+  cursor: default;
+}
+
+/* ── Frequency badge ── */
+.freqBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Check button ── */
+.checkRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checkBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 2px solid;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  background: transparent;
+}
+
+.checkBtnDone {
+  color: #fff;
+}
+
+/* ── Empty state ── */
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  opacity: 0.3;
+}
+
+.emptyText {
+  font-size: 16px;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.emptySub {
+  font-size: 13px;
+  color: #ccc;
+}
+
+/* ── Modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 36px 40px;
+  width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a18;
+  margin: 0;
+}
+
+.modalClose {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e8e4dd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a1a18;
+  background: #fdfcfa;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: #4a9e6b;
+  box-shadow: 0 0 0 2px rgba(74,158,107,0.12);
+}
+
+.select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e8e4dd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a1a18;
+  background: #fdfcfa;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.select:focus {
+  border-color: #4a9e6b;
+}
+
+/* Icon & color picker */
+.pickerRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.iconOption {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 2px solid #ece9e2;
+  background: #faf8f5;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.12s;
+}
+
+.iconOption:hover {
+  transform: scale(1.1);
+}
+
+.iconOptionActive {
+  border-color: #4a9e6b;
+  background: #f2fbf5;
+}
+
+.colorOption {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s;
+  outline: none;
+}
+
+.colorOption:hover {
+  transform: scale(1.15);
+}
+
+.colorOptionActive {
+  border-color: #1a1a18;
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 12px;
+  background: #1a1a18;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #2a2a27;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
