@@ -1,0 +1,99 @@
+.column {
+  min-width: 280px;
+  max-width: 280px;
+  background: #fff;
+  border: 1px solid #ece9e2;
+  border-radius: 12px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow 0.15s;
+}
+
+.column:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.over {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emoji {
+  font-size: 18px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a18;
+}
+
+.count {
+  background: #f0ede8;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: #888;
+  font-weight: 600;
+}
+
+.deleteColBtn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #ddd;
+  cursor: pointer;
+  padding: 0 4px;
+  border-radius: 4px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.deleteColBtn:hover {
+  color: #999;
+}
+
+.column:hover .deleteColBtn {
+  opacity: 1;
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 40px;
+}
+
+.addTaskBtn {
+  width: 100%;
+  padding: 8px 10px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.addTaskBtn:hover {
+  background: #faf8f5;
+  color: #1a1a18;
+}
