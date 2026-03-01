@@ -97,6 +97,7 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [todayWins, setTodayWins]     = useState({ total: 0, completed: 0 })
   const [habitStreak, setHabitStreak] = useState(0)
+  const [activeBoards, setActiveBoards] = useState(0)
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -144,6 +145,15 @@ export default function Home() {
         setHabitStreak(streak)
       }
 
+      // Fetch kanban projects count for active boards stat
+      const { count: boardCount } = await supabase
+        .from('kanban_projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+      if (typeof boardCount === 'number') {
+        setActiveBoards(boardCount)
+      }
+
       setLoading(false)
     }
     init()
@@ -155,8 +165,9 @@ export default function Home() {
   }
 
   const getStatValue = (label: string) => {
-    if (label === 'Daily Wins')     return `${todayWins.completed}/${todayWins.total}`
-    if (label === 'Habit Tracking') return habitStreak ? `${habitStreak} days` : '—'
+    if (label === 'Daily Wins')       return `${todayWins.completed}/${todayWins.total}`
+    if (label === 'Habit Tracking')   return habitStreak ? `${habitStreak} days` : '—'
+    if (label === 'Kanban Boards')    return activeBoards > 0 ? `${activeBoards}` : '—'
     return '—'
   }
 
