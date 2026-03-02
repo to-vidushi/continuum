@@ -77,6 +77,15 @@ const FEATURES = [
   },
 ]
 
+type Badge = {
+  id: string
+  title: string
+  icon: string
+  category: string
+  duration_days: number
+  earned_at: string
+}
+
 function getGreeting() {
   const h = new Date().getHours()
   if (h < 12) return 'Good morning'
@@ -94,8 +103,11 @@ export default function Home() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
+  const [userId, setUserId] = useState('')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [todayWins, setTodayWins] = useState({ total: 0, completed: 0 })
+  const [badges, setBadges] = useState<Badge[]>([])
+  const [badgesExpanded, setBadgesExpanded] = useState(false)
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -104,10 +116,12 @@ export default function Home() {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { router.push('/auth'); return }
 
+      const uid = session.user.id
       const email = session.user.email ?? ''
       setUserName(email.split('@')[0])
+      setUserId(uid)
 
-      // Fetch today's wins count
+      // Fetch today's wins
       const { data: wins } = await supabase
         .from('daily_wins')
         .select('completed')
@@ -120,28 +134,68 @@ export default function Home() {
         })
       }
 
+      // Fetch badges (challenges fully completed)
+      await loadBadges(uid)
+
       setLoading(false)
     }
     init()
   }, [router])
+
+  const loadBadges = async (uid: string) => {
+    const { data: participants } = await supabase
+      .from('challenge_participants')
+      .select('challenge_id')
+      .eq('user_id', uid)
+
+    if (!participants || participants.length === 0) return
+
+    const challengeIds = participants.map(p => p.challenge_id)
+
+    const [{ data: challenges }, { data: checkins }] = await Promise.all([
+      supabase.from('challenges').select('id, title, icon, category, duration_days').in('id', challengeIds),
+      supabase.from('challenge_checkins').select('challenge_id, checkin_date').eq('user_id', uid).in('challenge_id', challengeIds),
+    ])
+
+    if (!challenges || !checkins) return
+
+    const earned: Badge[] = []
+    for (const c of challenges) {
+      const userCheckins = checkins.filter(ck => ck.challenge_id === c.id)
+      if (userCheckins.length >= c.duration_days) {
+        const lastCheckin = userCheckins.sort((a, b) => b.checkin_date.localeCompare(a.checkin_date))[0]
+        earned.push({
+          id: c.id,
+          title: c.title,
+          icon: c.icon,
+          category: c.category,
+          duration_days: c.duration_days,
+          earned_at: lastCheckin?.checkin_date ?? '',
+        })
+      }
+    }
+
+    setBadges(earned)
+  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/auth')
   }
 
-  // Derive stat value per feature
   const getStatValue = (label: string) => {
     if (label === 'Daily Wins') return `${todayWins.completed}/${todayWins.total}`
     return '—'
   }
 
+  const displayedBadges = badgesExpanded ? badges : badges.slice(0, 6)
+
   if (loading) {
     return (
-      <div style={styles.loadingScreen}>
-        <div style={styles.loadingDot} />
-        <div style={{ ...styles.loadingDot, animationDelay: '0.2s' }} />
-        <div style={{ ...styles.loadingDot, animationDelay: '0.4s' }} />
+      <div style={pageStyles.loadingScreen}>
+        <div style={pageStyles.loadingDot} />
+        <div style={{ ...pageStyles.loadingDot, animationDelay: '0.2s' }} />
+        <div style={{ ...pageStyles.loadingDot, animationDelay: '0.4s' }} />
         <style>{`
           @keyframes bounce {
             0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
@@ -153,7 +207,7 @@ export default function Home() {
   }
 
   return (
-    <div style={styles.root}>
+    <div style={pageStyles.root}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -162,25 +216,38 @@ export default function Home() {
         .nav-item { transition: background 0.15s, color 0.15s; }
         .nav-item:hover { background: rgba(255,255,255,0.07) !important; }
         .sign-out-btn:hover { background: rgba(255,255,255,0.1) !important; }
+        .badge-card { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+        .badge-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important; border-color: #1a1a18 !important; }
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(16px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         .fade-up { animation: fadeUp 0.5s ease both; }
+        @keyframes popIn {
+          from { transform: scale(0.85); opacity: 0; }
+          to   { transform: scale(1); opacity: 1; }
+        }
         @keyframes bounce {
           0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
           40% { transform: translateY(-10px); opacity: 1; }
         }
+        @keyframes shimmerMove {
+          from { transform: translateX(-100%); }
+          to   { transform: translateX(100%); }
+        }
+        .badge-icon-inner:hover .badge-shimmer {
+          animation: shimmerMove 0.5s ease;
+        }
       `}</style>
 
       {/* Sidebar */}
-      <aside style={{ ...styles.sidebar, width: sidebarOpen ? 220 : 64 }}>
-        <div style={styles.logoRow}>
-          <div style={styles.logoMark}>C</div>
-          {sidebarOpen && <span style={styles.logoText}>Continuum</span>}
+      <aside style={{ ...pageStyles.sidebar, width: sidebarOpen ? 220 : 64 }}>
+        <div style={pageStyles.logoRow}>
+          <div style={pageStyles.logoMark}>C</div>
+          {sidebarOpen && <span style={pageStyles.logoText}>Continuum</span>}
         </div>
 
-        <nav style={styles.nav}>
+        <nav style={pageStyles.nav}>
           {NAV_ITEMS.map(item => (
             <button
               key={item.path}
@@ -188,29 +255,29 @@ export default function Home() {
               onClick={() => router.push(item.path)}
               title={!sidebarOpen ? item.label : undefined}
               style={{
-                ...styles.navItem,
+                ...pageStyles.navItem,
                 background: item.active ? 'rgba(255,255,255,0.1)' : 'transparent',
                 color: item.active ? '#fff' : 'rgba(255,255,255,0.55)',
                 justifyContent: sidebarOpen ? 'flex-start' : 'center',
               }}
             >
-              <span style={styles.navIcon}>{item.icon}</span>
-              {sidebarOpen && <span style={styles.navLabel}>{item.label}</span>}
+              <span style={pageStyles.navIcon}>{item.icon}</span>
+              {sidebarOpen && <span style={pageStyles.navLabel}>{item.label}</span>}
             </button>
           ))}
         </nav>
 
-        <div style={styles.sidebarBottom}>
+        <div style={pageStyles.sidebarBottom}>
           {sidebarOpen && (
-            <div style={styles.userChip}>
-              <div style={styles.avatar}>{userName[0]?.toUpperCase()}</div>
-              <span style={styles.userEmail}>{userName}</span>
+            <div style={pageStyles.userChip}>
+              <div style={pageStyles.avatar}>{userName[0]?.toUpperCase()}</div>
+              <span style={pageStyles.userEmail}>{userName}</span>
             </div>
           )}
           <button
             className="sign-out-btn"
             onClick={handleSignOut}
-            style={{ ...styles.signOutBtn, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}
+            style={{ ...pageStyles.signOutBtn, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}
           >
             <span>↪</span>
             {sidebarOpen && <span>Sign out</span>}
@@ -219,7 +286,7 @@ export default function Home() {
 
         <button
           onClick={() => setSidebarOpen(p => !p)}
-          style={styles.collapseBtn}
+          style={pageStyles.collapseBtn}
           title={sidebarOpen ? 'Collapse' : 'Expand'}
         >
           {sidebarOpen ? '‹' : '›'}
@@ -227,75 +294,147 @@ export default function Home() {
       </aside>
 
       {/* Main */}
-      <main style={styles.main}>
-        <div style={styles.topBar}>
-          <span style={styles.todayLabel}>{getTodayFormatted()}</span>
+      <main style={pageStyles.main}>
+        <div style={pageStyles.topBar}>
+          <span style={pageStyles.todayLabel}>{getTodayFormatted()}</span>
         </div>
 
         {/* Hero */}
-        <div className="fade-up" style={styles.hero}>
-          <div style={styles.greetingLabel}>{getGreeting()},</div>
-          <h1 style={styles.heroName}>{userName} 👋</h1>
-          <p style={styles.heroBye}>What will you win today?</p>
+        <div className="fade-up" style={pageStyles.hero}>
+          <div style={pageStyles.greetingLabel}>{getGreeting()},</div>
+          <h1 style={pageStyles.heroName}>{userName} 👋</h1>
+          <p style={pageStyles.heroBye}>What will you win today?</p>
         </div>
 
         {/* Stats strip */}
-        <div className="fade-up" style={{ ...styles.statsStrip, animationDelay: '0.1s' }}>
+        <div className="fade-up" style={{ ...pageStyles.statsStrip, animationDelay: '0.1s' }}>
           {[
             { label: "Today's Wins", value: `${todayWins.completed} / ${todayWins.total}`, icon: '🏆' },
             { label: 'Habit Streak',    value: '—', icon: '🔥' },
             { label: 'Active Challenge',value: '—', icon: '⚡' },
             { label: 'Week Score',      value: '—', icon: '📊' },
           ].map(stat => (
-            <div key={stat.label} style={styles.statCard}>
-              <span style={styles.statIcon}>{stat.icon}</span>
+            <div key={stat.label} style={pageStyles.statCard}>
+              <span style={pageStyles.statIcon}>{stat.icon}</span>
               <div>
-                <div style={styles.statValue}>{stat.value}</div>
-                <div style={styles.statLabel}>{stat.label}</div>
+                <div style={pageStyles.statValue}>{stat.value}</div>
+                <div style={pageStyles.statLabel}>{stat.label}</div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Section header */}
-        <div className="fade-up" style={{ ...styles.sectionHeader, animationDelay: '0.2s' }}>
-          <h2 style={styles.sectionTitle}>Your Space</h2>
-          <span style={styles.sectionSub}>Pick where to focus</span>
+        <div className="fade-up" style={{ ...pageStyles.sectionHeader, animationDelay: '0.2s' }}>
+          <h2 style={pageStyles.sectionTitle}>Your Space</h2>
+          <span style={pageStyles.sectionSub}>Pick where to focus</span>
         </div>
 
         {/* Feature grid */}
-        <div style={styles.grid}>
+        <div style={pageStyles.grid}>
           {FEATURES.map((f, i) => (
             <button
               key={f.label}
               className="feature-card fade-up"
               onClick={() => router.push(f.path)}
               style={{
-                ...styles.featureCard,
+                ...pageStyles.featureCard,
                 background: f.bg,
                 border: `1px solid ${f.border}`,
                 animationDelay: `${0.15 + i * 0.07}s`,
               }}
             >
-              <div style={styles.featureTop}>
-                <span style={styles.featureIcon}>{f.icon}</span>
-                <span style={{ ...styles.featureStat, color: f.color }}>
+              <div style={pageStyles.featureTop}>
+                <span style={pageStyles.featureIcon}>{f.icon}</span>
+                <span style={{ ...pageStyles.featureStat, color: f.color }}>
                   {getStatValue(f.label)}{' '}
-                  <span style={styles.featureStatLabel}>{f.stat}</span>
+                  <span style={pageStyles.featureStatLabel}>{f.stat}</span>
                 </span>
               </div>
-              <div style={{ ...styles.featureLabel, color: f.color }}>{f.label}</div>
-              <div style={styles.featureDesc}>{f.description}</div>
-              <div style={{ ...styles.featureArrow, color: f.color }}>→</div>
+              <div style={{ ...pageStyles.featureLabel, color: f.color }}>{f.label}</div>
+              <div style={pageStyles.featureDesc}>{f.description}</div>
+              <div style={{ ...pageStyles.featureArrow, color: f.color }}>→</div>
             </button>
           ))}
+        </div>
+
+        {/* ── Badges Section ── */}
+        <div className="fade-up" style={{ animationDelay: '0.5s', marginTop: 48 }}>
+          {/* Header */}
+          <div style={pageStyles.sectionHeader}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flex: 1 }}>
+              <h2 style={pageStyles.sectionTitle}>Badges</h2>
+              <span style={pageStyles.sectionSub}>Challenges you've fully completed</span>
+            </div>
+            {badges.length > 0 && (
+              <div style={pageStyles.badgeCount}>{badges.length} earned</div>
+            )}
+          </div>
+
+          {badges.length === 0 ? (
+            /* Empty state */
+            <div style={pageStyles.badgeEmpty}>
+              <div style={pageStyles.badgeEmptyIcon}>🏅</div>
+              <div style={pageStyles.badgeEmptyTitle}>No badges yet</div>
+              <div style={pageStyles.badgeEmptySub}>
+                Complete all days of a challenge to earn your first badge.
+              </div>
+              <button
+                onClick={() => router.push('/challenges')}
+                style={pageStyles.badgeEmptyBtn}
+              >
+                Browse challenges →
+              </button>
+            </div>
+          ) : (
+            <>
+              <div style={pageStyles.badgeGrid}>
+                {displayedBadges.map((badge, i) => (
+                  <div
+                    key={badge.id}
+                    className="badge-card"
+                    style={{
+                      ...pageStyles.badgeCard,
+                      animation: `popIn 0.35s cubic-bezier(0.34,1.56,0.64,1) ${i * 0.06}s both`,
+                    }}
+                  >
+                    {/* Icon */}
+                    <div className="badge-icon-inner" style={pageStyles.badgeIconWrap}>
+                      <span style={{ fontSize: 28, position: 'relative', zIndex: 1 }}>{badge.icon}</span>
+                      <div
+                        className="badge-shimmer"
+                        style={pageStyles.badgeShimmer}
+                      />
+                    </div>
+
+                    {/* Text */}
+                    <div style={pageStyles.badgeTitle}>{badge.title}</div>
+                    <div style={pageStyles.badgeMeta}>{badge.duration_days}d · {badge.category}</div>
+                    <div style={pageStyles.badgeDate}>
+                      {new Date(badge.earned_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
+                    <div style={pageStyles.badgePill}>✓ Completed</div>
+                  </div>
+                ))}
+              </div>
+
+              {badges.length > 6 && (
+                <button
+                  onClick={() => setBadgesExpanded(e => !e)}
+                  style={pageStyles.showMoreBtn}
+                >
+                  {badgesExpanded ? 'Show less ↑' : `Show all ${badges.length} badges ↓`}
+                </button>
+              )}
+            </>
+          )}
         </div>
       </main>
     </div>
   )
 }
 
-const styles: Record<string, React.CSSProperties> = {
+const pageStyles: Record<string, React.CSSProperties> = {
   root: {
     display: 'flex',
     minHeight: '100vh',
@@ -525,4 +664,111 @@ const styles: Record<string, React.CSSProperties> = {
   featureLabel: { fontSize: '17px', fontWeight: 700, letterSpacing: '-0.2px' },
   featureDesc: { fontSize: '13px', color: '#777', lineHeight: 1.5, flex: 1 },
   featureArrow: { fontSize: '18px', marginTop: 8, fontWeight: 300 },
+
+  // ── Badge styles ──
+  badgeCount: {
+    fontSize: '12px',
+    fontWeight: 700,
+    color: '#1a1a18',
+    background: '#ede9e2',
+    borderRadius: '20px',
+    padding: '4px 12px',
+    whiteSpace: 'nowrap',
+  },
+  badgeGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+    gap: 12,
+  },
+  badgeCard: {
+    background: '#fdfcfa',
+    borderRadius: '16px',
+    padding: '20px 14px 16px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 8,
+    border: '1.5px solid #ede9e2',
+    cursor: 'default',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+  },
+  badgeIconWrap: {
+    width: 60,
+    height: 60,
+    background: '#1a1a18',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  badgeShimmer: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)',
+    transform: 'translateX(-100%)',
+  },
+  badgeTitle: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: '#1a1a18',
+    textAlign: 'center',
+    lineHeight: 1.3,
+  },
+  badgeMeta: {
+    fontSize: 10,
+    color: '#aaa',
+    fontFamily: 'monospace',
+    textAlign: 'center',
+  },
+  badgeDate: {
+    fontSize: 10,
+    color: '#bbb',
+    fontFamily: 'monospace',
+  },
+  badgePill: {
+    fontSize: 10,
+    fontWeight: 700,
+    color: '#2a7a4b',
+    background: '#eaf7ef',
+    borderRadius: '20px',
+    padding: '3px 10px',
+  },
+  badgeEmpty: {
+    background: '#fdfcfa',
+    border: '1.5px solid #ede9e2',
+    borderRadius: '16px',
+    padding: '40px 20px',
+    textAlign: 'center',
+  },
+  badgeEmptyIcon: { fontSize: 40, marginBottom: 12, opacity: 0.4 },
+  badgeEmptyTitle: { fontSize: 16, fontWeight: 700, color: '#1a1a18', marginBottom: 6 },
+  badgeEmptySub: { fontSize: 13, color: '#aaa', maxWidth: 260, margin: '0 auto', lineHeight: 1.5 },
+  badgeEmptyBtn: {
+    marginTop: 16,
+    padding: '8px 18px',
+    background: '#1a1a18',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '10px',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontFamily: "'DM Sans', system-ui, sans-serif",
+  },
+  showMoreBtn: {
+    marginTop: 16,
+    width: '100%',
+    padding: '10px',
+    background: 'transparent',
+    border: '1.5px solid #ede9e2',
+    borderRadius: '12px',
+    fontSize: 13,
+    fontWeight: 600,
+    color: '#777',
+    cursor: 'pointer',
+    fontFamily: "'DM Sans', system-ui, sans-serif",
+    transition: 'all 0.15s',
+  },
 }
