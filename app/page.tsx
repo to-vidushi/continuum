@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 const NAV_ITEMS = [
-  { icon: '⊞', label: 'Dashboard',    path: '/',              active: true  },
-  { icon: '🏆', label: 'Daily Wins',  path: '/daily-wins',    active: false },
-  { icon: '🔁', label: 'Habits',      path: '/habits',        active: false },
-  { icon: '📊', label: 'Visualisation',path: '/visualisation',active: false },
-  { icon: '⬜', label: 'Kanban',      path: '/kanban',        active: false },
-  { icon: '📝', label: 'Weekly Review',path: '/weekly-review',active: false },
-  { icon: '⚡', label: 'Challenges',  path: '/challenges',    active: false },
+  { icon: '⊞', label: 'Dashboard',     path: '/',               active: true  },
+  { icon: '🏆', label: 'Daily Wins',   path: '/daily-wins',     active: false },
+  { icon: '🔁', label: 'Habits',       path: '/habits',         active: false },
+  { icon: '📊', label: 'Visualisation',path: '/visualisation',  active: false },
+  { icon: '⬜', label: 'Kanban',       path: '/kanban',         active: false },
+  { icon: '📝', label: 'Weekly Review',path: '/weekly-review',  active: false },
+  { icon: '⚡', label: 'Challenges',   path: '/challenges',     active: false },
 ]
 
 const FEATURES = [
@@ -101,6 +101,7 @@ function getTodayFormatted() {
 
 export default function Home() {
   const router = useRouter()
+
   const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState('')
   const [userId, setUserId] = useState('')
@@ -108,6 +109,11 @@ export default function Home() {
   const [todayWins, setTodayWins] = useState({ total: 0, completed: 0 })
   const [badges, setBadges] = useState<Badge[]>([])
   const [badgesExpanded, setBadgesExpanded] = useState(false)
+
+
+  const [habitStreak, setHabitStreak] = useState(0)
+  const [activeBoards, setActiveBoards] = useState(0)
+
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -134,8 +140,42 @@ export default function Home() {
         })
       }
 
+
       // Fetch badges (challenges fully completed)
       await loadBadges(uid)
+
+      // Fetch habit streak
+      const { data: completions } = await supabase
+        .from('habit_completions')
+        .select('completed_date')
+        .eq('user_id', session.user.id)
+        .order('completed_date', { ascending: false })
+
+      if (completions) {
+        let streak = 0
+        const now = new Date()
+        for (let i = 0; i < 365; i++) {
+          const d = new Date(now)
+          d.setDate(now.getDate() - i)
+          const dateStr = d.toISOString().split('T')[0]
+          if (completions.some(c => c.completed_date === dateStr)) {
+            streak++
+          } else {
+            break
+          }
+        }
+        setHabitStreak(streak)
+      }
+
+      // Fetch kanban projects count for active boards stat
+      const { count: boardCount } = await supabase
+        .from('kanban_projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+      if (typeof boardCount === 'number') {
+        setActiveBoards(boardCount)
+      }
+
 
       setLoading(false)
     }
@@ -184,7 +224,9 @@ export default function Home() {
   }
 
   const getStatValue = (label: string) => {
-    if (label === 'Daily Wins') return `${todayWins.completed}/${todayWins.total}`
+    if (label === 'Daily Wins')       return `${todayWins.completed}/${todayWins.total}`
+    if (label === 'Habit Tracking')   return habitStreak ? `${habitStreak} days` : '—'
+    if (label === 'Kanban Boards')    return activeBoards > 0 ? `${activeBoards}` : '—'
     return '—'
   }
 
@@ -309,10 +351,10 @@ export default function Home() {
         {/* Stats strip */}
         <div className="fade-up" style={{ ...pageStyles.statsStrip, animationDelay: '0.1s' }}>
           {[
-            { label: "Today's Wins", value: `${todayWins.completed} / ${todayWins.total}`, icon: '🏆' },
-            { label: 'Habit Streak',    value: '—', icon: '🔥' },
-            { label: 'Active Challenge',value: '—', icon: '⚡' },
-            { label: 'Week Score',      value: '—', icon: '📊' },
+            { label: "Today's Wins",    value: `${todayWins.completed} / ${todayWins.total}`, icon: '🏆' },
+            { label: 'Habit Streak',    value: habitStreak ? `🔥 ${habitStreak} days` : '—',  icon: '🔥' },
+            { label: 'Active Challenge',value: '—',                                            icon: '⚡' },
+            { label: 'Week Score',      value: '—',                                            icon: '📊' },
           ].map(stat => (
             <div key={stat.label} style={pageStyles.statCard}>
               <span style={pageStyles.statIcon}>{stat.icon}</span>
@@ -515,7 +557,7 @@ const pageStyles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
   },
-  navIcon: { fontSize: '16px', flexShrink: 0, width: 20, textAlign: 'center' },
+  navIcon:  { fontSize: '16px', flexShrink: 0, width: 20, textAlign: 'center' },
   navLabel: { fontSize: '14px' },
   sidebarBottom: {
     padding: '12px 10px 16px',
@@ -594,8 +636,8 @@ const pageStyles: Record<string, React.CSSProperties> = {
     justifyContent: 'flex-end',
   },
   todayLabel: { fontSize: '13px', color: '#aaa' },
-  hero: { paddingTop: 32, paddingBottom: 36 },
-  greetingLabel: { fontSize: '15px', color: '#999', marginBottom: 4 },
+  hero:         { paddingTop: 32, paddingBottom: 36 },
+  greetingLabel:{ fontSize: '15px', color: '#999', marginBottom: 4 },
   heroName: {
     fontFamily: "'DM Serif Display', serif",
     fontSize: '42px',
@@ -621,7 +663,7 @@ const pageStyles: Record<string, React.CSSProperties> = {
     border: '1px solid #ece9e2',
     boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
   },
-  statIcon: { fontSize: '22px' },
+  statIcon:  { fontSize: '22px' },
   statValue: { fontSize: '20px', fontWeight: 700, color: '#1a1a18', lineHeight: 1 },
   statLabel: { fontSize: '12px', color: '#aaa', marginTop: 2 },
   sectionHeader: {
@@ -658,9 +700,10 @@ const pageStyles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     marginBottom: 6,
   },
-  featureIcon: { fontSize: '26px' },
-  featureStat: { fontSize: '15px', fontWeight: 700 },
+  featureIcon:      { fontSize: '26px' },
+  featureStat:      { fontSize: '15px', fontWeight: 700 },
   featureStatLabel: { fontSize: '11px', fontWeight: 400, opacity: 0.7 },
+
   featureLabel: { fontSize: '17px', fontWeight: 700, letterSpacing: '-0.2px' },
   featureDesc: { fontSize: '13px', color: '#777', lineHeight: 1.5, flex: 1 },
   featureArrow: { fontSize: '18px', marginTop: 8, fontWeight: 300 },
@@ -771,4 +814,9 @@ const pageStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'DM Sans', system-ui, sans-serif",
     transition: 'all 0.15s',
   },
+
+  featureLabel:     { fontSize: '17px', fontWeight: 700, letterSpacing: '-0.2px' },
+  featureDesc:      { fontSize: '13px', color: '#777', lineHeight: 1.5, flex: 1 },
+  featureArrow:     { fontSize: '18px', marginTop: 8, fontWeight: 300 },
+
 }

@@ -1,0 +1,103 @@
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid #ece9e2;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: box-shadow 0.15s;
+  user-select: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.dragging {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  rotate: 0deg;
+  cursor: grabbing;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  color: #374151;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a18;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.desc {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.avatar {
+  width: 22px;
+  height: 22px;
+  background: #f0ede8;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+}
+
+.date {
+  font-size: 11px;
+  color: #aaa;
+  flex: 1;
+}
+
+.deleteBtn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #ddd;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.card:hover .deleteBtn {
+  opacity: 1;
+}
+
+.deleteBtn:hover {
+  color: #e8736c;
+}
