@@ -5,14 +5,16 @@ import { supabase } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import styles from './DailyWins.module.css'
 
-const CATEGORIES = ['Life', 'Mental', 'Physical', 'Spiritual'] as const
+const CATEGORIES = ['Mind', 'Body', 'Spirit', 'Health', 'Learning', 'Other'] as const
 type Category = typeof CATEGORIES[number]
 
 const CATEGORY_CONFIG: Record<Category, { icon: string; color: string }> = {
-  Life:      { icon: '🌸', color: '#e8736c' },
-  Mental:    { icon: '💡', color: '#d4a017' },
-  Physical:  { icon: '🏔️', color: '#4a9e6b' },
-  Spiritual: { icon: '☀️', color: '#e08c3a' },
+  Mind:     { icon: '🧠', color: '#d4a017' },
+  Body:     { icon: '🏃‍♀️', color: '#4a9e6b' },
+  Spirit:   { icon: '✨', color: '#e08c3a' },
+  Health:   { icon: '❤️', color: '#e8736c' },
+  Learning: { icon: '📚', color: '#6b7cff' },
+  Other:    { icon: '🧩', color: '#8b8b8b' },
 }
 
 type Win = {
@@ -67,9 +69,11 @@ const PAST_DAYS: DayOffset[] = [2, 3, 4, 5, 6, 7]
 export default function DailyWinsPage() {
   const [wins, setWins] = useState<Win[]>([])
   const [activeOffset, setActiveOffset] = useState<DayOffset>(0)
+  
   const [inputs, setInputs] = useState<Record<Category, string>>({
-    Life: '', Mental: '', Physical: '', Spiritual: '',
+    Mind: '', Body: '', Spirit: '', Health: '', Learning: '', Other: '',
   })
+  
   const [addingTo, setAddingTo] = useState<Category | null>(null)
   const [showScore, setShowScore] = useState(false)
   const [showPastMenu, setShowPastMenu] = useState(false)
@@ -92,7 +96,7 @@ export default function DailyWinsPage() {
       if (data) setWins(data)
     }
     load()
-  }, [activeOffset])
+  }, [targetDate, router]) // FIXED: Added proper dependencies to avoid linting issues
 
   const addWin = async (category: Category) => {
     if (!isToday) return
