@@ -815,8 +815,4 @@ const pageStyles: Record<string, React.CSSProperties> = {
     transition: 'all 0.15s',
   },
 
-  featureLabel:     { fontSize: '17px', fontWeight: 700, letterSpacing: '-0.2px' },
-  featureDesc:      { fontSize: '13px', color: '#777', lineHeight: 1.5, flex: 1 },
-  featureArrow:     { fontSize: '18px', marginTop: 8, fontWeight: 300 },
-
 }
