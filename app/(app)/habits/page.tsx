@@ -33,6 +33,18 @@ const FREQ_COLORS: Record<string, { bg: string; color: string }> = {
   monthly: { bg: '#fffbf0', color: '#d4a017' },
 }
 
+// Maps habit category → daily wins category
+// Daily wins uses: 'Mind' | 'Body' | 'Spirit' | 'Health' | 'Learning' | 'Other'
+const CATEGORY_MAP: Record<string, string> = {
+  Health:  'Health',
+  Mind:    'Mind',
+  Body:    'Body',
+  Spirit:  'Spirit',
+  Work:    'Other',
+  Social:  'Other',
+  General: 'Other',
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 function getLast7Days(): string[] {
   return Array.from({ length: 7 }, (_, i) => {
@@ -59,31 +71,22 @@ function computeStreak(completions: string[]): { current: number; longest: numbe
   let streak = 0
   let prev: Date | null = null
 
-  // Current streak from today backwards
   const today = new Date(getTodayStr())
   for (let i = 0; i < 365; i++) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
     const s = d.toISOString().split('T')[0]
-    if (completions.includes(s)) {
-      current++
-    } else {
-      break
-    }
+    if (completions.includes(s)) current++
+    else break
   }
 
-  // Longest streak
   for (const dateStr of sorted) {
     const date = new Date(dateStr)
     if (!prev) {
       streak = 1
     } else {
       const diff = (prev.getTime() - date.getTime()) / 86400000
-      if (diff === 1) {
-        streak++
-      } else {
-        streak = 1
-      }
+      streak = diff === 1 ? streak + 1 : 1
     }
     longest = Math.max(longest, streak)
     prev = date
@@ -101,6 +104,7 @@ export default function HabitsPage() {
   const [loading, setLoading]         = useState(true)
   const [filter, setFilter]           = useState<'all' | 'daily' | 'weekly' | 'monthly'>('all')
   const [showModal, setShowModal]     = useState(false)
+  const [syncMsg, setSyncMsg]         = useState<string | null>(null)
 
   // New habit form state
   const [newName, setNewName]           = useState('')
@@ -113,7 +117,7 @@ export default function HabitsPage() {
   const today = getTodayStr()
   const last7 = getLast7Days()
 
-  // ── Load data from Supabase ───────────────────────────────────────────
+  // ── Load data ─────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth'); return }
@@ -130,30 +134,75 @@ export default function HabitsPage() {
 
   useEffect(() => { load() }, [load])
 
-  // ── Toggle today's completion ─────────────────────────────────────────
-  const toggleCompletion = async (habitId: string) => {
+  // ── Show toast notification ───────────────────────────────────────────
+  const showSync = (msg: string) => {
+    setSyncMsg(msg)
+    setTimeout(() => setSyncMsg(null), 2500)
+  }
+
+  // ── Toggle completion + sync to Daily Wins ────────────────────────────
+  const toggleCompletion = async (habit: Habit) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
     const isCompleted = completions.some(
-      c => c.habit_id === habitId && c.completed_date === today
+      c => c.habit_id === habit.id && c.completed_date === today
     )
 
+    const dailyWinsCategory = CATEGORY_MAP[habit.category] ?? 'Other'
+    const winTitle = `${habit.icon} ${habit.name}`
+
     if (isCompleted) {
+      // ── UNMARK ──
       await supabase
         .from('habit_completions')
         .delete()
-        .eq('habit_id', habitId)
+        .eq('habit_id', habit.id)
         .eq('completed_date', today)
+
       setCompletions(prev =>
-        prev.filter(c => !(c.habit_id === habitId && c.completed_date === today))
+        prev.filter(c => !(c.habit_id === habit.id && c.completed_date === today))
       )
+
+      // Remove the linked daily win
+      await supabase
+        .from('daily_wins')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('win_date', today)
+        .eq('title', winTitle)
+        .eq('category', dailyWinsCategory)
+
+      showSync(`Removed "${habit.name}" from Daily Wins`)
+
     } else {
+      // ── MARK DONE ──
       const { data } = await supabase
         .from('habit_completions')
-        .insert({ habit_id: habitId, user_id: user.id, completed_date: today })
+        .insert({ habit_id: habit.id, user_id: user.id, completed_date: today })
         .select()
+
       if (data) setCompletions(prev => [...prev, ...data])
+
+      // Avoid duplicates — check if win already exists
+      const { data: existing } = await supabase
+        .from('daily_wins')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('win_date', today)
+        .eq('title', winTitle)
+        .maybeSingle()
+
+      if (!existing) {
+        await supabase.from('daily_wins').insert({
+          user_id: user.id,
+          title: winTitle,
+          category: dailyWinsCategory,
+          win_date: today,
+          completed: true,
+        })
+        showSync(`✅ "${habit.name}" added to Daily Wins!`)
+      }
     }
   }
 
@@ -213,7 +262,6 @@ export default function HabitsPage() {
 
   const filteredHabits = filter === 'all' ? habits : habits.filter(h => h.frequency === filter)
 
-  // ── Loading screen ────────────────────────────────────────────────────
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: '#faf8f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -224,6 +272,18 @@ export default function HabitsPage() {
 
   return (
     <div className={styles.page}>
+
+      {/* ── Toast notification ── */}
+      {syncMsg && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+          background: '#1a1a18', color: '#fff', padding: '12px 24px',
+          borderRadius: 12, fontSize: 14, fontWeight: 500, zIndex: 999,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+        }}>
+          {syncMsg}
+        </div>
+      )}
 
       {/* ── Add Habit Modal ── */}
       {showModal && (
@@ -303,6 +363,20 @@ export default function HabitsPage() {
         </button>
       </div>
 
+      {/* ── Info banner ── */}
+      <div style={{
+        margin: '12px 32px 0',
+        padding: '10px 16px',
+        background: '#f2fbf5',
+        border: '1px solid #c3e6cc',
+        borderRadius: 10,
+        fontSize: 13,
+        color: '#4a9e6b',
+        fontWeight: 500,
+      }}>
+        🔗 Completing a habit today automatically adds it as a ✅ win in your Daily Wins!
+      </div>
+
       {/* ── Stats Strip ── */}
       <div className={styles.statsStrip}>
         {[
@@ -354,8 +428,8 @@ export default function HabitsPage() {
               .map(c => c.completed_date)
 
             const { current, longest } = computeStreak(hCompletions)
-            const isToday    = hCompletions.includes(today)
-            const freqStyle  = FREQ_COLORS[habit.frequency] ?? FREQ_COLORS.daily
+            const isDoneToday = hCompletions.includes(today)
+            const freqStyle   = FREQ_COLORS[habit.frequency] ?? FREQ_COLORS.daily
 
             return (
               <div key={habit.id} className={styles.card}>
@@ -416,16 +490,22 @@ export default function HabitsPage() {
                 {/* Mark today button */}
                 <div className={styles.checkRow}>
                   <button
-                    className={`${styles.checkBtn} ${isToday ? styles.checkBtnDone : ''}`}
+                    className={`${styles.checkBtn} ${isDoneToday ? styles.checkBtnDone : ''}`}
                     style={{
                       borderColor: habit.color,
-                      background: isToday ? habit.color : 'transparent',
-                      color: isToday ? '#fff' : habit.color,
+                      background: isDoneToday ? habit.color : 'transparent',
+                      color: isDoneToday ? '#fff' : habit.color,
                     }}
-                    onClick={() => toggleCompletion(habit.id)}
+                    onClick={() => toggleCompletion(habit)}
                   >
-                    {isToday ? '✓ Done today!' : '○ Mark today'}
+                    {isDoneToday ? '✓ Done today!' : '○ Mark today'}
                   </button>
+
+                  {isDoneToday && (
+                    <span style={{ fontSize: 11, color: '#4a9e6b', fontWeight: 600 }}>
+                      🏆 In Daily Wins
+                    </span>
+                  )}
                 </div>
 
               </div>

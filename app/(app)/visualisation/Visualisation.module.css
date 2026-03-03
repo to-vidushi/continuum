@@ -3,6 +3,8 @@
   background: #faf8f5;
   font-family: 'DM Sans', system-ui, sans-serif;
   padding-bottom: 60px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .pageHeader {
@@ -31,6 +33,8 @@
   gap: 4px;
   border-bottom: 1px solid #e8e4de;
   background: #faf8f5;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .tab {
@@ -52,13 +56,53 @@
   border-bottom: 2px solid #222;
 }
 
+/* ── Stats strip ── */
+.statsStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 24px 32px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.statCard {
+  background: #fff;
+  border: 1px solid #ece9e2;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  min-width: 0;
+}
+
+.statIcon { font-size: 22px; flex-shrink: 0; }
+
+.statValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a18;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
 /* ── Content area ── */
 .content {
   padding: 28px 32px 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Section cards ── */
@@ -68,6 +112,9 @@
   border-radius: 16px;
   padding: 24px 28px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .sectionTitle {
@@ -83,44 +130,10 @@
   margin: 0 0 20px;
 }
 
-/* ── Stats strip ── */
-.statsStrip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  padding: 24px 32px 0;
-  max-width: 1200px;
-}
-
-.statCard {
-  background: #fff;
-  border: 1px solid #ece9e2;
-  border-radius: 12px;
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-}
-
-.statIcon { font-size: 22px; }
-
-.statValue {
-  font-size: 22px;
-  font-weight: 700;
-  color: #1a1a18;
-  line-height: 1;
-}
-
-.statLabel {
-  font-size: 12px;
-  color: #aaa;
-  margin-top: 2px;
-}
-
 /* ── Heatmap ── */
 .heatmapWrap {
   overflow-x: auto;
+  width: 100%;
 }
 
 .heatmapGrid {
@@ -140,24 +153,11 @@
   border-radius: 3px;
   transition: transform 0.1s;
   cursor: default;
+  flex-shrink: 0;
 }
 
 .heatCell:hover {
   transform: scale(1.3);
-}
-
-.heatmapMonthLabels {
-  display: flex;
-  gap: 3px;
-  margin-bottom: 4px;
-  padding-left: 0;
-}
-
-.heatmapMonthLabel {
-  font-size: 10px;
-  color: #bbb;
-  width: 14px;
-  text-align: center;
 }
 
 .heatmapDayLabels {
@@ -231,42 +231,7 @@
   border-color: transparent;
 }
 
-/* ── Bar chart ── */
-.barChart {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 120px;
-}
-
-.barWrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
-}
-
-.bar {
-  width: 100%;
-  border-radius: 6px 6px 0 0;
-  transition: height 0.4s ease;
-  min-height: 2px;
-}
-
-.barLabel {
-  font-size: 10px;
-  color: #bbb;
-  text-align: center;
-}
-
-.barValue {
-  font-size: 11px;
-  font-weight: 600;
-  color: #666;
-}
-
-/* ── Line chart (daily wins) ── */
+/* ── Line chart ── */
 .lineChartWrap {
   width: 100%;
   overflow: hidden;
@@ -304,6 +269,8 @@
   font-size: 13px;
   font-weight: 700;
   color: #888;
+  white-space: nowrap;
+  margin-left: 12px;
 }
 
 .progressBg {
@@ -311,6 +278,7 @@
   border-radius: 999px;
   height: 8px;
   overflow: hidden;
+  width: 100%;
 }
 
 .progressFill {
@@ -331,7 +299,7 @@
 .periodSelector {
   display: flex;
   gap: 6px;
-  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .periodBtn {
@@ -351,4 +319,42 @@
   background: #1a1a18;
   border-color: #1a1a18;
   color: #fff;
+}
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 1024px) {
+  .statsStrip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .pageHeader,
+  .tabBar,
+  .statsStrip,
+  .content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .statsStrip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .statValue {
+    font-size: 18px;
+  }
+
+  .statLabel {
+    font-size: 11px;
+  }
+
+  .sectionCard {
+    padding: 16px;
+  }
+
+  .heading {
+    font-size: 22px;
+  }
 }
