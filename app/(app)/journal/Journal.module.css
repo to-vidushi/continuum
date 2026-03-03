@@ -1,0 +1,322 @@
+.page {
+  min-height: 100vh;
+  background: #faf8f5;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  padding: 28px 32px 60px;
+}
+
+/* ── Loading ── */
+.loadingWrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingDots {
+  display: flex;
+  gap: 6px;
+}
+
+.loadingDots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+
+.loadingDots span:nth-child(2) { animation-delay: 0.18s; }
+.loadingDots span:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0);    opacity: 0.4; }
+  40%           { transform: translateY(-7px); opacity: 1;   }
+}
+
+/* ── Header ── */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.heading {
+  font-size: 28px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.subheading {
+  font-size: 14px;
+  color: #aaa;
+}
+
+.todayPill {
+  margin-top: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.todayPillDone {
+  background: #eaf7ef;
+  color: #2a7a4b;
+}
+
+.todayPillPending {
+  background: #fff5f4;
+  color: #c0504a;
+}
+
+/* ── Stats strip ── */
+.statsStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 48px;
+}
+
+.statCard {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #ece9e2;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.statIcon  { font-size: 22px; }
+.statValue { font-size: 20px; font-weight: 700; color: #1a1a18; line-height: 1; }
+.statLabel { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+/* ── Empty state ── */
+.emptyState {
+  text-align: center;
+  padding: 80px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.emptyIcon  { font-size: 48px; opacity: 0.3; }
+.emptyTitle { font-size: 18px; font-weight: 700; color: #1a1a18; }
+.emptySub   { font-size: 13px; color: #ccc; line-height: 1.6; max-width: 300px; }
+
+/* ── Timeline ── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Month group */
+.monthGroup {
+  margin-bottom: 8px;
+}
+
+.monthLabel {
+  font-size: 13px;
+  font-weight: 400;
+  color: #bbb;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding-left: 72px; /* aligns with entry cards */
+}
+
+/* Each row: date | line | card */
+.timelineRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+/* ── Date side ── */
+.dateSide {
+  width: 52px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-top: 18px;
+  padding-right: 12px;
+}
+
+.dayNum {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a18;
+  line-height: 1;
+}
+
+.weekday {
+  font-size: 10px;
+  color: #bbb;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+/* ── Centre line column ── */
+.lineCol {
+  width: 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 22px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d1cdc5;
+  border: 2px solid #f5f3ef;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: background 0.2s;
+}
+
+.dotToday {
+  background: #1a1a18;
+  width: 12px;
+  height: 12px;
+  box-shadow: 0 0 0 3px rgba(26,26,24,0.12);
+}
+
+.line {
+  width: 2px;
+  flex: 1;
+  min-height: 24px;
+  background: #e8e4de;
+  margin-top: 4px;
+}
+
+/* ── Entry card ── */
+.entryCard {
+  flex: 1;
+  background: #fff;
+  border: 1.5px solid #ece9e2;
+  border-radius: 14px;
+  padding: 18px 20px 16px;
+  margin-left: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.18s;
+  animation: fadeUp 0.35s ease both;
+}
+
+.entryCard:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+.entryCardToday {
+  border-color: #1a1a18;
+  background: #fdfcfa;
+}
+
+/* Relative label (Today / Yesterday) */
+.relLabel {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #aaa;
+  background: #f5f3ef;
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-bottom: 8px;
+}
+
+.relLabelToday {
+  color: #1a1a18;
+  background: #e8e4de;
+}
+
+.entryDate {
+  font-size: 12px;
+  color: #bbb;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.entryContent {
+  font-size: 15px;
+  color: #333;
+  line-height: 1.75;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.entryMeta {
+  margin-top: 14px;
+  font-size: 11px;
+  color: #ccc;
+  font-family: monospace;
+}
+
+/* ── Timeline end cap ── */
+.timelineEnd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 60px;
+  margin-top: 4px;
+  padding-bottom: 32px;
+}
+
+.endDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e8e4de;
+  flex-shrink: 0;
+}
+
+.endLabel {
+  font-size: 12px;
+  color: #ccc;
+  font-style: italic;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .page {
+    padding: 24px 16px 80px;
+  }
+
+  .statsStrip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .heading {
+    font-size: 28px;
+  }
+
+  .dayNum {
+    font-size: 18px;
+  }
+
+  .entryContent {
+    font-size: 14px;
+  }
+}
