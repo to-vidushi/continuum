@@ -24,7 +24,7 @@ const FEATURES = [
     color: '#4a9e6b',
     bg: '#f2fbf5',
     border: '#c3e6cc',
-    stat: 'Current streak',
+    stat: 'day streak',
   },
   {
     icon: '📊',
@@ -34,7 +34,7 @@ const FEATURES = [
     color: '#5b7fe8',
     bg: '#f2f5ff',
     border: '#c8d4f8',
-    stat: 'This week',
+    stat: 'habits this week',
   },
   {
     icon: '⬜',
@@ -44,7 +44,7 @@ const FEATURES = [
     color: '#9b6ed4',
     bg: '#f8f2ff',
     border: '#dcc8f8',
-    stat: 'Active boards',
+    stat: 'boards',
   },
   {
     icon: '📝',
@@ -54,17 +54,17 @@ const FEATURES = [
     color: '#3a7bd5',
     bg: '#f0f5ff',
     border: '#c5d8f8',
-    stat: 'Entries',
+    stat: 'entries',
   },
   {
     icon: '🗓️',
     label: 'Weekly Review',
-    description: 'Auto-generated review of your week based on your lists and habits.',
+    description: 'AI-generated review of your week based on your wins, habits and journal.',
     path: '/weekly-review',
     color: '#d4a017',
     bg: '#fffbf0',
     border: '#f0dfa0',
-    stat: 'Last review',
+    stat: 'last score',
   },
   {
     icon: '⚡',
@@ -74,7 +74,7 @@ const FEATURES = [
     color: '#e08c3a',
     bg: '#fff8f0',
     border: '#f8d9b0',
-    stat: 'Active now',
+    stat: 'active',
   },
 ]
 
@@ -100,19 +100,40 @@ function getTodayFormatted() {
   })
 }
 
+function getCurrentWeekStart() {
+  const now = new Date()
+  const day  = now.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  const mon  = new Date(now)
+  mon.setDate(now.getDate() + diff)
+  return mon.toISOString().split('T')[0]
+}
+
 export default function Home() {
   const router = useRouter()
 
-  const [loading, setLoading]               = useState(true)
-  const [userName, setUserName]             = useState('')
-  const [todayWins, setTodayWins]           = useState({ total: 0, completed: 0 })
-  const [badges, setBadges]                 = useState<Badge[]>([])
+  const [loading, setLoading]           = useState(true)
+  const [userName, setUserName]         = useState('')
+  const [todayWins, setTodayWins]       = useState({ total: 0, completed: 0 })
+  const [badges, setBadges]             = useState<Badge[]>([])
   const [badgesExpanded, setBadgesExpanded] = useState(false)
-  const [habitStreak, setHabitStreak]       = useState(0)
-  const [activeBoards, setActiveBoards]     = useState(0)
-  const [journalCount, setJournalCount]     = useState(0)
 
-  const today = new Date().toISOString().split('T')[0]
+  // Stats
+  const [habitStreak, setHabitStreak]         = useState(0)
+  const [activeBoards, setActiveBoards]       = useState(0)
+  const [journalCount, setJournalCount]       = useState(0)
+  const [activeChallenges, setActiveChallenges] = useState(0)
+  const [weekScore, setWeekScore]             = useState<number | null>(null)
+  const [weekScoreDelta, setWeekScoreDelta]   = useState<number | null>(null)
+  const [habitsThisWeek, setHabitsThisWeek]   = useState<string>('—')
+
+  const today     = new Date().toISOString().split('T')[0]
+  const weekStart = getCurrentWeekStart()
+  const weekEnd   = (() => {
+    const d = new Date(weekStart)
+    d.setDate(d.getDate() + 6)
+    return d.toISOString().split('T')[0]
+  })()
 
   useEffect(() => {
     const init = async () => {
@@ -126,19 +147,74 @@ export default function Home() {
       const [
         { data: wins },
         { data: completions },
+        { data: allHabits },
         { count: boardCount },
         { count: journalTotal },
+        { data: participations },
+        { data: weeklyReviews },
+        { data: habitCompsThisWeek },
       ] = await Promise.all([
+        // Today's wins
         supabase.from('daily_wins').select('completed').eq('win_date', today),
-        supabase.from('habit_completions').select('completed_date').eq('user_id', uid).order('completed_date', { ascending: false }),
-        supabase.from('kanban_projects').select('id', { count: 'exact', head: true }).eq('user_id', uid),
-        supabase.from('journal_entries').select('id', { count: 'exact', head: true }),
+
+        // All habit completions for streak calc
+        supabase
+          .from('habit_completions')
+          .select('completed_date')
+          .eq('user_id', uid)
+          .order('completed_date', { ascending: false }),
+
+        // All habits for this week's completion rate
+        supabase
+          .from('habits')
+          .select('id, frequency')
+          .eq('user_id', uid),
+
+        // Kanban boards count
+        supabase
+          .from('kanban_projects')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', uid),
+
+        // Journal entries count
+        supabase
+          .from('journal_entries')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', uid),
+
+        // Challenge participations to find active ones
+        supabase
+          .from('challenge_participants')
+          .select('challenge_id')
+          .eq('user_id', uid),
+
+        // Weekly reviews for score
+        supabase
+          .from('weekly_reviews')
+          .select('week_start, week_score')
+          .eq('user_id', uid)
+          .order('week_start', { ascending: false })
+          .limit(2),
+
+        // Habit completions this week
+        supabase
+          .from('habit_completions')
+          .select('habit_id')
+          .eq('user_id', uid)
+          .gte('completed_date', weekStart)
+          .lte('completed_date', weekEnd),
       ])
 
+      // ── Today's wins ──
       if (wins) setTodayWins({ total: wins.length, completed: wins.filter(w => w.completed).length })
+
+      // ── Kanban boards ──
       if (typeof boardCount === 'number') setActiveBoards(boardCount)
+
+      // ── Journal count ──
       if (typeof journalTotal === 'number') setJournalCount(journalTotal)
 
+      // ── Habit streak ──
       if (completions) {
         let streak = 0
         const now = new Date()
@@ -152,11 +228,56 @@ export default function Home() {
         setHabitStreak(streak)
       }
 
+      // ── Habits this week completion rate ──
+      if (allHabits && habitCompsThisWeek) {
+        const dailyHabits = allHabits.filter(h => h.frequency === 'daily')
+        const possible    = dailyHabits.length * 7
+        const done        = habitCompsThisWeek.length
+        if (possible > 0) {
+          const pct = Math.round((done / possible) * 100)
+          setHabitsThisWeek(`${pct}%`)
+        } else {
+          setHabitsThisWeek('—')
+        }
+      }
+
+      // ── Active challenges ──
+      if (participations?.length) {
+        const challengeIds = participations.map(p => p.challenge_id)
+        const [{ data: challenges }, { data: allCheckins }] = await Promise.all([
+          supabase
+            .from('challenges')
+            .select('id, duration_days, is_active')
+            .in('id', challengeIds)
+            .eq('is_active', true),
+          supabase
+            .from('challenge_checkins')
+            .select('challenge_id')
+            .eq('user_id', uid)
+            .in('challenge_id', challengeIds),
+        ])
+        if (challenges) {
+          const active = challenges.filter(c => {
+            const done = (allCheckins ?? []).filter(ck => ck.challenge_id === c.id).length
+            return done < c.duration_days
+          })
+          setActiveChallenges(active.length)
+        }
+      }
+
+      // ── Week score + delta ──
+      if (weeklyReviews?.length) {
+        setWeekScore(weeklyReviews[0].week_score)
+        if (weeklyReviews.length > 1) {
+          setWeekScoreDelta(weeklyReviews[0].week_score - weeklyReviews[1].week_score)
+        }
+      }
+
       await loadBadges(uid)
       setLoading(false)
     }
     init()
-  }, [router, today])
+  }, [router, today, weekStart, weekEnd])
 
   const loadBadges = async (uid: string) => {
     const { data: participants } = await supabase
@@ -174,22 +295,32 @@ export default function Home() {
     for (const c of challenges) {
       const userCheckins = checkins.filter(ck => ck.challenge_id === c.id)
       if (userCheckins.length >= c.duration_days) {
-        const last = userCheckins.sort((a, b) => b.checkin_date.localeCompare(a.checkin_date))[0]
+        const last = [...userCheckins].sort((a, b) => b.checkin_date.localeCompare(a.checkin_date))[0]
         earned.push({ id: c.id, title: c.title, icon: c.icon, category: c.category, duration_days: c.duration_days, earned_at: last?.checkin_date ?? '' })
       }
     }
     setBadges(earned)
   }
 
-  const getStatValue = (label: string) => {
+  function getStatValue(label: string): string {
     if (label === 'Daily Wins')     return `${todayWins.completed}/${todayWins.total}`
-    if (label === 'Habit Tracking') return habitStreak ? `${habitStreak} days` : '—'
+    if (label === 'Habit Tracking') return habitStreak > 0 ? `${habitStreak}` : '—'
+    if (label === 'Visualisation')  return habitsThisWeek
     if (label === 'Kanban Boards')  return activeBoards > 0 ? `${activeBoards}` : '—'
     if (label === 'Journal')        return journalCount > 0 ? `${journalCount}` : '—'
+    if (label === 'Weekly Review')  return weekScore !== null ? `${weekScore}` : '—'
+    if (label === 'Challenges')     return activeChallenges > 0 ? `${activeChallenges}` : '—'
     return '—'
   }
 
   const displayedBadges = badgesExpanded ? badges : badges.slice(0, 6)
+
+  // Week score delta label
+  const deltaLabel = weekScoreDelta !== null
+    ? weekScoreDelta > 0  ? `↑ +${weekScoreDelta} vs last week`
+    : weekScoreDelta < 0  ? `↓ ${weekScoreDelta} vs last week`
+    : '= same as last week'
+    : null
 
   if (loading) {
     return (
@@ -217,6 +348,9 @@ export default function Home() {
         @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-10px);opacity:1}}
         @keyframes shimmerMove{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
         .badge-icon-inner:hover .badge-shimmer{animation:shimmerMove .5s ease}
+        .delta-up{color:#2a7a4b}
+        .delta-down{color:#c0504a}
+        .delta-same{color:#aaa}
       `}</style>
 
       <Sidebar />
@@ -235,20 +369,53 @@ export default function Home() {
 
         {/* Stats strip */}
         <div className="fade-up" style={{ ...s.statsStrip, animationDelay: '0.1s' }}>
-          {[
-            { label: "Today's Wins",    value: `${todayWins.completed} / ${todayWins.total}`, icon: '🏆' },
-            { label: 'Habit Streak',    value: habitStreak ? `🔥 ${habitStreak} days` : '—',  icon: '🔥' },
-            { label: 'Active Challenge',value: '—',                                            icon: '⚡' },
-            { label: 'Week Score',      value: '—',                                            icon: '📊' },
-          ].map(stat => (
-            <div key={stat.label} style={s.statCard}>
-              <span style={s.statIcon}>{stat.icon}</span>
-              <div>
-                <div style={s.statValue}>{stat.value}</div>
-                <div style={s.statLabel}>{stat.label}</div>
-              </div>
+
+          {/* Today's wins */}
+          <div style={s.statCard}>
+            <span style={s.statIcon}>🏆</span>
+            <div>
+              <div style={s.statValue}>{todayWins.completed} / {todayWins.total}</div>
+              <div style={s.statLabel}>Today's wins</div>
             </div>
-          ))}
+          </div>
+
+          {/* Habit streak */}
+          <div style={s.statCard}>
+            <span style={s.statIcon}>🔥</span>
+            <div>
+              <div style={s.statValue}>{habitStreak > 0 ? `${habitStreak} days` : '—'}</div>
+              <div style={s.statLabel}>Habit streak</div>
+            </div>
+          </div>
+
+          {/* Active challenges */}
+          <div style={s.statCard}>
+            <span style={s.statIcon}>⚡</span>
+            <div>
+              <div style={s.statValue}>{activeChallenges > 0 ? activeChallenges : '—'}</div>
+              <div style={s.statLabel}>Active challenges</div>
+            </div>
+          </div>
+
+          {/* Week score */}
+          <div style={s.statCard}>
+            <span style={s.statIcon}>📊</span>
+            <div>
+              <div style={s.statValue}>
+                {weekScore !== null ? `${weekScore}/100` : '—'}
+              </div>
+              <div style={s.statLabel}>Week score</div>
+              {deltaLabel && (
+                <div style={{
+                  fontSize: 11, marginTop: 2, fontWeight: 600,
+                  color: weekScoreDelta! > 0 ? '#2a7a4b' : weekScoreDelta! < 0 ? '#c0504a' : '#aaa'
+                }}>
+                  {deltaLabel}
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
 
         {/* Section header */}
@@ -336,46 +503,46 @@ export default function Home() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  root: { display: 'flex', minHeight: '100vh', background: '#f5f3ef', fontFamily: "'DM Sans', system-ui, sans-serif" },
-  loadingScreen: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#1a1a18' },
-  loadingDot: { width: 10, height: 10, borderRadius: '50%', background: '#fff', animation: 'bounce 1.2s infinite ease-in-out' },
-  main: { flex: 1, padding: '0 48px 60px', overflowY: 'auto', minWidth: 0 },
-  topBar: { padding: '24px 0 0', display: 'flex', justifyContent: 'flex-end' },
-  todayLabel: { fontSize: '13px', color: '#aaa' },
-  hero: { paddingTop: 32, paddingBottom: 36 },
-  greetingLabel: { fontSize: '15px', color: '#999', marginBottom: 4 },
-  heroName: { fontFamily: "'DM Serif Display', serif", fontSize: '42px', fontWeight: 400, color: '#1a1a18', lineHeight: 1.1, marginBottom: 8 },
-  heroBye: { fontSize: '16px', color: '#888' },
-  statsStrip: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 40 },
-  statCard: { background: '#fff', borderRadius: '12px', padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 12, border: '1px solid #ece9e2', boxShadow: '0 1px 4px rgba(0,0,0,.04)' },
-  statIcon: { fontSize: '22px' },
-  statValue: { fontSize: '20px', fontWeight: 700, color: '#1a1a18', lineHeight: 1 },
-  statLabel: { fontSize: '12px', color: '#aaa', marginTop: 2 },
-  sectionHeader: { display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 18 },
+  root:         { display: 'flex', minHeight: '100vh', background: '#f5f3ef', fontFamily: "'DM Sans', system-ui, sans-serif" },
+  loadingScreen:{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#1a1a18' },
+  loadingDot:   { width: 10, height: 10, borderRadius: '50%', background: '#fff', animation: 'bounce 1.2s infinite ease-in-out' },
+  main:         { flex: 1, padding: '0 48px 60px', overflowY: 'auto', minWidth: 0 },
+  topBar:       { padding: '24px 0 0', display: 'flex', justifyContent: 'flex-end' },
+  todayLabel:   { fontSize: '13px', color: '#aaa' },
+  hero:         { paddingTop: 32, paddingBottom: 36 },
+  greetingLabel:{ fontSize: '15px', color: '#999', marginBottom: 4 },
+  heroName:     { fontFamily: "'DM Serif Display', serif", fontSize: '42px', fontWeight: 400, color: '#1a1a18', lineHeight: 1.1, marginBottom: 8 },
+  heroBye:      { fontSize: '16px', color: '#888' },
+  statsStrip:   { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 40 },
+  statCard:     { background: '#fff', borderRadius: '12px', padding: '16px 18px', display: 'flex', alignItems: 'flex-start', gap: 12, border: '1px solid #ece9e2', boxShadow: '0 1px 4px rgba(0,0,0,.04)' },
+  statIcon:     { fontSize: '22px', marginTop: 1 },
+  statValue:    { fontSize: '20px', fontWeight: 700, color: '#1a1a18', lineHeight: 1 },
+  statLabel:    { fontSize: '12px', color: '#aaa', marginTop: 3 },
+  sectionHeader:{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 18 },
   sectionTitle: { fontFamily: "'DM Serif Display', serif", fontSize: '22px', fontWeight: 400, color: '#1a1a18' },
-  sectionSub: { fontSize: '13px', color: '#bbb' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 },
-  featureCard: { borderRadius: '14px', padding: '22px 22px 18px', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer', textAlign: 'left', boxShadow: '0 2px 8px rgba(0,0,0,.05)' },
-  featureTop: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  featureIcon: { fontSize: '26px' },
-  featureStat: { fontSize: '15px', fontWeight: 700 },
+  sectionSub:   { fontSize: '13px', color: '#bbb' },
+  grid:         { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 },
+  featureCard:  { borderRadius: '14px', padding: '22px 22px 18px', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer', textAlign: 'left', boxShadow: '0 2px 8px rgba(0,0,0,.05)' },
+  featureTop:   { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
+  featureIcon:  { fontSize: '26px' },
+  featureStat:  { fontSize: '15px', fontWeight: 700 },
   featureStatLabel: { fontSize: '11px', fontWeight: 400, opacity: 0.7 },
   featureLabel: { fontSize: '17px', fontWeight: 700, letterSpacing: '-0.2px' },
-  featureDesc: { fontSize: '13px', color: '#777', lineHeight: 1.5, flex: 1 },
+  featureDesc:  { fontSize: '13px', color: '#777', lineHeight: 1.5, flex: 1 },
   featureArrow: { fontSize: '18px', marginTop: 8, fontWeight: 300 },
-  badgeCount: { fontSize: '12px', fontWeight: 700, color: '#1a1a18', background: '#ede9e2', borderRadius: '20px', padding: '4px 12px', whiteSpace: 'nowrap' },
-  badgeGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 },
-  badgeCard: { background: '#fdfcfa', borderRadius: '16px', padding: '20px 14px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, border: '1.5px solid #ede9e2', cursor: 'default', boxShadow: '0 1px 4px rgba(0,0,0,.04)' },
-  badgeIconWrap: { width: 60, height: 60, background: '#1a1a18', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' },
+  badgeCount:   { fontSize: '12px', fontWeight: 700, color: '#1a1a18', background: '#ede9e2', borderRadius: '20px', padding: '4px 12px', whiteSpace: 'nowrap' },
+  badgeGrid:    { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 12 },
+  badgeCard:    { background: '#fdfcfa', borderRadius: '16px', padding: '20px 14px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, border: '1.5px solid #ede9e2', cursor: 'default', boxShadow: '0 1px 4px rgba(0,0,0,.04)' },
+  badgeIconWrap:{ width: 60, height: 60, background: '#1a1a18', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' },
   badgeShimmer: { position: 'absolute', inset: 0, background: 'linear-gradient(105deg,transparent 30%,rgba(255,255,255,.15) 50%,transparent 70%)', transform: 'translateX(-100%)' },
-  badgeTitle: { fontSize: 13, fontWeight: 700, color: '#1a1a18', textAlign: 'center', lineHeight: 1.3 },
-  badgeMeta: { fontSize: 10, color: '#aaa', fontFamily: 'monospace', textAlign: 'center' },
-  badgeDate: { fontSize: 10, color: '#bbb', fontFamily: 'monospace' },
-  badgePill: { fontSize: 10, fontWeight: 700, color: '#2a7a4b', background: '#eaf7ef', borderRadius: '20px', padding: '3px 10px' },
-  badgeEmpty: { background: '#fdfcfa', border: '1.5px solid #ede9e2', borderRadius: '16px', padding: '40px 20px', textAlign: 'center' },
-  badgeEmptyIcon: { fontSize: 40, marginBottom: 12, opacity: 0.4 },
+  badgeTitle:   { fontSize: 13, fontWeight: 700, color: '#1a1a18', textAlign: 'center', lineHeight: 1.3 },
+  badgeMeta:    { fontSize: 10, color: '#aaa', fontFamily: 'monospace', textAlign: 'center' },
+  badgeDate:    { fontSize: 10, color: '#bbb', fontFamily: 'monospace' },
+  badgePill:    { fontSize: 10, fontWeight: 700, color: '#2a7a4b', background: '#eaf7ef', borderRadius: '20px', padding: '3px 10px' },
+  badgeEmpty:   { background: '#fdfcfa', border: '1.5px solid #ede9e2', borderRadius: '16px', padding: '40px 20px', textAlign: 'center' },
+  badgeEmptyIcon:  { fontSize: 40, marginBottom: 12, opacity: 0.4 },
   badgeEmptyTitle: { fontSize: 16, fontWeight: 700, color: '#1a1a18', marginBottom: 6 },
-  badgeEmptySub: { fontSize: 13, color: '#aaa', maxWidth: 260, margin: '0 auto', lineHeight: 1.5 },
-  badgeEmptyBtn: { marginTop: 16, padding: '8px 18px', background: '#1a1a18', color: '#fff', border: 'none', borderRadius: '10px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', system-ui, sans-serif" },
-  showMoreBtn: { marginTop: 16, width: '100%', padding: '10px', background: 'transparent', border: '1.5px solid #ede9e2', borderRadius: '12px', fontSize: 13, fontWeight: 600, color: '#777', cursor: 'pointer', fontFamily: "'DM Sans', system-ui, sans-serif" },
+  badgeEmptySub:   { fontSize: 13, color: '#aaa', maxWidth: 260, margin: '0 auto', lineHeight: 1.5 },
+  badgeEmptyBtn:   { marginTop: 16, padding: '8px 18px', background: '#1a1a18', color: '#fff', border: 'none', borderRadius: '10px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', system-ui, sans-serif" },
+  showMoreBtn:     { marginTop: 16, width: '100%', padding: '10px', background: 'transparent', border: '1.5px solid #ede9e2', borderRadius: '12px', fontSize: 13, fontWeight: 600, color: '#777', cursor: 'pointer', fontFamily: "'DM Sans', system-ui, sans-serif" },
 }
