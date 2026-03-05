@@ -32,7 +32,7 @@ The idea is simple: every day you plan your wins, complete your habits, log your
 **Team:**
 | Name | Role |
 |------|------|
-| Vidhushi Bahuguna | Full Stack Developer |
+| Vidushi Bahuguna | Full Stack Developer |
 | Varshini Mallidi | Full Stack Developer |
 | Mani Harshitha Chintakunta | Full Stack Developer |
 
