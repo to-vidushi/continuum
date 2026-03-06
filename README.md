@@ -30,11 +30,11 @@ The idea is simple: every day you plan your wins, complete your habits, log your
 **Built with:** Next.js · TypeScript · Supabase · Groq AI · Recharts
 
 **Team:**
-| Name | Role |
+| Name |
 |------|------|
-| Vidushi Bahuguna | Full Stack Developer |
-| Varshini Mallidi | Full Stack Developer |
-| Mani Harshitha Chintakunta | Full Stack Developer |
+| Vidushi Bahuguna |
+| Varshini Mallidi |
+| Mani Harshitha Chintakunta |
 
 ---
 
