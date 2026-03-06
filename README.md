@@ -30,11 +30,7 @@ The idea is simple: every day you plan your wins, complete your habits, log your
 **Built with:** Next.js · TypeScript · Supabase · Groq AI · Recharts
 
 **Team:**
-| Name |
-|------|------|
-| Vidushi Bahuguna |
-| Varshini Mallidi |
-| Mani Harshitha Chintakunta |
+Vidushi Bahuguna, Varshini Mallidi, Mani Harshitha Chintakunta
 
 ---
 
